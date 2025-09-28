@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Yeni Şifre Belirle</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: rgb(249, 249, 249);
+            color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        form {
+            background-color: rgb(249, 249, 249);
+            padding: 80px 40px;
+            border-radius: 50px;
+            box-shadow: none;
+            width: 350px;
+            text-align: center;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1 {
+            color: black;
+            font-size: 28px;
+            margin-bottom: 25px;
+            text-shadow: none;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 50px;
+            box-sizing: border-box;
+            background-color: white;
+            color: black;
+            font-size: 16px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        input::placeholder {
+            color: #777;
+        }
+
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        .main-button {
+            background-color: black;
+            color: white;
+            padding: 15px;
+        }
+
+        .main-button:hover {
+            background-color: #333;
+        }
+
+        .signup-link {
+            font-size: 14px;
+        }
+
+        .signup-link a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <form method="POST" action="/yeni-sifre">
+        <h1>Yeni Şifre Belirle</h1>
+
+        <p>E-postana gelen kodu ve yeni şifreni gir.</p>
+
+        <input type="hidden" name="email" value="{{ email }}">
+        <input type="text" name="kod" placeholder="6 Haneli Kod" maxlength="6">
+        <input type="password" name="yeni_sifre" placeholder="Yeni Şifre">
+
+        <button type="submit" class="main-button">Şifreyi Güncelle</button>
+
+    </form>
+
+</body>
+</html>

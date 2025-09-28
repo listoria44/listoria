@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Film Önerileri - Listoria</title>
+    <style>
+        :root {
+            --background-color: #f9f9f9;
+            --text-color: #3c4043;
+            --shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            --primary-color: #4285f4;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .user-items {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            color: var(--text-color);
+        }
+
+        .user-items h3 {
+            margin: 0 0 10px 0;
+            font-weight: 500;
+        }
+
+        .user-items p {
+            margin: 0;
+        }
+
+        .recommendations {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .item-card {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s;
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .item-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .item-meta {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+        }
+
+        .back-btn {
+            display: inline-block;
+            background: #ffffff;
+            color: var(--text-color);
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 25px;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+            box-shadow: var(--shadow);
+        }
+
+        .back-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .genre-badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('oneri_sayfasi', kategori='film') }}" class="back-btn">← Yeni Film Önerisi</a>
+        
+        <div class="header">
+            <h1>Film Önerileri</h1>
+            <p>Beğendiklerinize göre basit liste</p>
+        </div>
+        
+        <div class="user-items">
+            <h3>📝 Beğendiğiniz Filmler:</h3>
+            <p>{{ ', '.join(kullanici_filmleri) }}</p>
+        </div>
+        
+        <div class="recommendations">
+            <ul style="list-style:none; padding:0; margin:0;">
+                {% for film in oneriler %}
+                <li class="item-card">
+                    <div class="item-title">{{ film.baslik }}</div>
+                    <div class="item-meta">
+                        <span class="genre-badge">{{ film.tur }}</span>
+                        <strong>Yönetmen:</strong> {{ film.yonetmen }} ·
+                        <strong>Yapım Yılı:</strong> {{ film.yapim_yili }}
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

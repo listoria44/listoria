@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listoria - Ana Sayfa</title>
+    <style>
+        /* Genel stil değişkenleri */
+        :root {
+            --background-color: #f9f9f9;
+            --sidebar-color: #f0f4f9;
+            --text-color: #3c4043;
+            --shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            --primary-color: #4285f4;
+            --success-color: #34a853;
+            --warning-color: #fbbc04;
+            --danger-color: #ea4335;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+        }
+
+        /* Sabit sol menü (Sidebar) stili */
+        .sidebar {
+            width: 15%;
+            min-width: 200px;
+            max-width: 250px;
+            background-color: var(--sidebar-color);
+            padding: 24px 16px;
+            box-sizing: border-box;
+            border-right: 1px solid #dadce0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            height: 100vh;
+            position: fixed;
+        }
+        
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* Logo için stil */
+        .logo-container {
+            font-size: 28px;
+            font-weight: 500;
+            color: #333;
+            padding: 8px 12px;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: -0.5px;
+        }
+
+        /* Profil kartı */
+        .profile-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        .profile-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary-color), var(--success-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0 auto 15px;
+        }
+
+        .profile-name {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-color);
+        }
+
+        .profile-email {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .profile-age {
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Hızlı istatistikler */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Çıkış butonu */
+        .logout-btn {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .logout-btn:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+        }
+        
+        /* Ana İçerik Bölümü */
+        .main-content {
+            flex-grow: 1;
+            background-color: var(--background-color);
+            display: flex;
+            flex-direction: column;
+            margin-left: 250px;
+        }
+        
+        /* Header Stili */
+        .header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            color: white;
+        }
+        
+        .header p {
+            font-size: 18px;
+            color: rgba(255,255,255,0.9);
+            margin: 0;
+        }
+
+        .welcome-message {
+            background: rgba(255,255,255,0.1);
+            padding: 15px 25px;
+            border-radius: 25px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Kategori Grid */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            padding: 20px 40px 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        /* Kategori Kartları */
+        .category-card {
+            background: white;
+            border-radius: 16px;
+            padding: 32px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            border: 1px solid #f0f0f0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .category-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .category-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            border-color: var(--primary-color);
+        }
+        
+        .category-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            transition: transform 0.3s ease;
+        }
+        
+        .category-card:hover .category-icon {
+            transform: scale(1.1);
+        }
+        
+        .category-card h3 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: var(--text-color);
+        }
+        
+        .category-card p {
+            font-size: 14px;
+            color: #666;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* Öne çıkan özellikler */
+        .features-section {
+            padding: 40px;
+            background: white;
+            margin: 20px 40px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .features-title {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: var(--text-color);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-item {
+            text-align: center;
+            padding: 20px;
+            border-radius: 12px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .feature-desc {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .api-status {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .api-status-active {
+            color: #34a853;
+        }
+        
+        .api-status-inactive {
+            color: #ea4335;
+        }
+        
+        .api-test-btn {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 12px;
+            background: #4285f4;
+            color: white;
+            border-radius: 15px;
+            text-decoration: none;
+            font-size: 11px;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .categories-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            
+            .features-section {
+                margin: 20px;
+                padding: 20px;
+            }
+        }
+    </style>
+    <!-- Gerekli fontlar için Google Fonts linkleri -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        <!-- Sol Menü (Sidebar) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    Listoria
+                </div>
+            </div>
+            
+            <!-- Profil Kartı -->
+            <div class="profile-card">
+                <div class="profile-avatar">
+                    {{ session['kullanici_adi'][0].upper() }}
+                </div>
+                <div class="profile-name">{{ session['kullanici_adi'] }}</div>
+                <div class="profile-email">{{ profil.email or 'Email bilgisi yok' }}</div>
+                {% if profil.yas %}
+                <div class="profile-age">{{ profil.yas }} yaşında</div>
+                {% endif %}
+            </div>
+
+            <!-- Hızlı İstatistikler -->
+            <div class="quick-stats">
+                <div class="stat-item">
+                    <div class="stat-number">4</div>
+                    <div class="stat-label">Kategori</div>
+                </div>
+            </div>
+
+            <!-- API Durumu -->
+            <div class="profile-card" style="padding: 15px;">
+                <div style="font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #333;">🔗 API Durumu</div>
+                <div class="api-status">
+                    {% if api_durumu %}
+                        📚 Books: <span class="{% if api_durumu.google_books %}api-status-active{% else %}api-status-inactive{% endif %}">{% if api_durumu.google_books %}Aktif{% else %}Kapalı{% endif %}</span><br>
+                        🎬 TMDB: <span class="{% if api_durumu.tmdb %}api-status-active{% else %}api-status-inactive{% endif %}">{% if api_durumu.tmdb %}Aktif{% else %}Kapalı{% endif %}</span><br>
+                        🎵 Music: <span class="{% if api_durumu.lastfm %}api-status-active{% else %}api-status-inactive{% endif %}">{% if api_durumu.lastfm %}Aktif{% else %}Kapalı{% endif %}</span><br>
+                        🤖 AI: <span class="{% if api_durumu.hugging_face %}api-status-active{% else %}api-status-inactive{% endif %}">{% if api_durumu.hugging_face %}Aktif{% else %}Kapalı{% endif %}</span>
+                    {% else %}
+                        Bilgi yükleniyor...
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('api_test') }}" class="api-test-btn">Test Et</a>
+            </div>
+
+            <!-- Çıkış Butonu -->
+            <a href="{{ url_for('cikis') }}" class="logout-btn">Çıkış Yap</a>
+        </aside>
+
+        <!-- Ana İçerik -->
+        <main class="main-content">
+            <div class="header">
+                <h1>Merhaba {{ session['kullanici_adi'] }}!</h1>
+                <p>Listoria'ya hoş geldin! Senin için en iyi önerileri hazırladık</p>
+                
+                <div class="welcome-message">
+                    {% if profil.yas %}
+                        {% if profil.yas < 18 %}
+                            🎯 Yaşına uygun içerikler seçtik
+                        {% else %}
+                        {% endif %}
+                    {% else %}
+                        🎯 Kişiselleştirilmiş öneriler için profilini tamamla
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="categories-grid">
+                <div class="category-card" onclick="selectCategory('kitap')">
+                    <div class="category-icon">📚</div>
+                    <h3>Kitap Önerileri</h3>
+                    <p>Yaşına ve ilgilerine uygun, AI destekli kitap önerileri</p>
+                </div>
+                
+                <div class="category-card" onclick="selectCategory('dizi')">
+                    <div class="category-icon">📺</div>
+                    <h3>Dizi Önerileri</h3>
+                    <p>Binge-watch için mükemmel, türüne göre seçilmiş diziler</p>
+                </div>
+                
+                <div class="category-card" onclick="selectCategory('film')">
+                    <div class="category-icon">🎬</div>
+                    <h3>Film Önerileri</h3>
+                    <p>Akşam keyfi için, ruh haline uygun film önerileri</p>
+                </div>
+                
+                <div class="category-card" onclick="selectCategory('muzik')">
+                    <div class="category-icon">🎵</div>
+                    <h3>Müzik Önerileri</h3>
+                    <p>Spotify playlist'leri ve ruh haline uygun müzik listeleri</p>
+                </div>
+            </div>
+
+            <!-- Öne Çıkan Özellikler -->
+            <div class="features-section">
+                <h2 class="features-title">Listoria'nın Özellikleri</h2>
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <div class="feature-icon">🤖</div>
+                        <div class="feature-title">AI Destekli</div>
+                        <div class="feature-desc">Yapay zeka ile kişiselleştirilmiş öneriler</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🎯</div>
+                        <div class="feature-title">Yaş Uyumlu</div>
+                        <div class="feature-desc">Yaşına uygun içerik filtreleme</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-title">Detaylı Analiz</div>
+                        <div class="feature-desc">Tema, tür ve yazar tarzına göre öneriler</div>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">⚡</div>
+                        <div class="feature-title">Hızlı Sonuç</div>
+                        <div class="feature-desc">Saniyeler içinde öneriler</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function selectCategory(category) {
+            // Kategori seçildiğinde ilgili sayfaya yönlendir
+            window.location.href = `/oneri/${category}`;
+        }
+
+        // Sayfa yüklendiğinde animasyon ekle
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.category-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,44 @@
+[
+  {
+    "baslik": "Harry Potter ve Felsefe Taşı",
+    "yazar": "J.K. Rowling",
+    "sayfa": 320,
+    "tur": "Fantastik",
+    "yas_uygun": true,
+    "tema": ["büyü", "okul", "dostluk"],
+    "yazar_tarzi": "modern_fantastik",
+    "neden": "Büyücülük okulu ve dostluk maceraları",
+    "dil": "İngilizce",
+    "yil": "1997",
+    "aciklama": "11 yaşındaki Harry Potter'ın büyücülük okulundaki maceraları",
+    "anahtar_kelimeler": ["büyü", "okul", "dostluk", "macera", "fantastik"]
+  },
+  {
+    "baslik": "Yüzüklerin Efendisi",
+    "yazar": "J.R.R. Tolkien",
+    "sayfa": 1216,
+    "tur": "Fantastik",
+    "yas_uygun": false,
+    "tema": ["epik", "macera", "mitoloji"],
+    "yazar_tarzi": "klasik_fantastik",
+    "neden": "Epik fantastik macera ve mitolojik dünya",
+    "dil": "İngilizce",
+    "yil": "1954",
+    "aciklama": "Orta Dünya'da yüzüğün yok edilmesi için yapılan yolculuk",
+    "anahtar_kelimeler": ["epik", "macera", "mitoloji", "fantastik", "yüzük"]
+  },
+  {
+    "baslik": "1984",
+    "yazar": "George Orwell",
+    "sayfa": 350,
+    "tur": "Distopya",
+    "yas_uygun": false,
+    "tema": ["totaliter", "gözetim"],
+    "yazar_tarzi": "politik_eleştiri",
+    "neden": "Totaliter rejim ve gözetim toplumu eleştirisi",
+    "dil": "İngilizce",
+    "yil": "1949",
+    "aciklama": "Totaliter bir rejimde yaşayan bir adamın hikayesi",
+    "anahtar_kelimeler": ["totaliter", "gözetim", "politik", "eleştiri", "distopya"]
+  }
+]

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hoş Geldin!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #ece9e6, #ffffff);
+            color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background-color: rgb(249, 249, 249);
+            padding: 80px 40px;
+            border-radius: 25px; 
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); 
+            width: 400px;
+            text-align: center;
+        }
+        h1 {
+            color: black;
+        }
+        p {
+            color: #555;
+            font-size: 18px;
+        }
+        a.logout-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            color: white;
+            background-color: black;
+            text-decoration: none;
+            border-radius: 50px;
+            transition: background-color 0.3s;
+        }
+        a.logout-btn:hover {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hoş geldin, {{ session['kullanici_adi'] }}!</h1>
+        <p>Hangi türde öneri almak istiyorsun?</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 30px 0;">
+            <a href="{{ url_for('oneri_sayfasi', kategori='kitap') }}" style="display: block; padding: 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 15px; font-weight: bold; transition: all 0.3s;">
+                📚 Kitap Önerileri
+            </a>
+            <a href="{{ url_for('film_oneri_sayfasi') }}" style="display: block; padding: 20px; background: #2196F3; color: white; text-decoration: none; border-radius: 15px; font-weight: bold; transition: all 0.3s;">
+                🎬 Film Önerileri
+            </a>
+            <a href="{{ url_for('dizi_oneri_sayfasi') }}" style="display: block; padding: 20px; background: #FF9800; color: white; text-decoration: none; border-radius: 15px; font-weight: bold; transition: all 0.3s;">
+                📺 Dizi Önerileri
+            </a>
+            <a href="{{ url_for('oneri_sayfasi', kategori='muzik') }}" style="display: block; padding: 20px; background: #1DB954; color: white; text-decoration: none; border-radius: 15px; font-weight: bold; transition: all 0.3s;">
+                🎵 Müzik Önerileri
+            </a>
+        </div>
+        
+        <a href="{{ url_for('cikis') }}" class="logout-btn">Çıkış Yap</a>
+    </div>
+</body>
+</html>

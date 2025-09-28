@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giriş Yap</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            /* R 249, G 249, B 249 rengi (#f9f9f9) olarak ayarlandı */
+            background-color: #f9f9f9;
+            color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        form {
+            background-color: transparent; /* Formun kendi rengi kaldırıldı */
+            padding: 80px 40px;
+            border-radius: 25px; 
+            box-shadow: none; /* Gölge kaldırıldı */
+            width: 350px;
+            text-align: center;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1 {
+            color: black;
+            font-size: 28px;
+            margin-bottom: 25px;
+            text-shadow: none;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 50px;
+            box-sizing: border-box;
+            background-color: white;
+            color: black;
+            font-size: 16px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        
+        input::placeholder {
+            color: #777;
+        }
+
+        input:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 12px;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: black;
+            color: white;
+            padding: 15px;
+        }
+
+        .btn-primary:hover {
+            background-color: #333;
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .separator {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: black;
+            font-size: 18px; 
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .separator::before,
+        .separator::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .separator:not(:empty)::before {
+            margin-right: .25em;
+        }
+
+        .separator:not(:empty)::after {
+            margin-left: .25em;
+        }
+
+        .btn-google {
+            background-color: white;
+            color: #333;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-decoration: none;
+        }
+
+        .btn-google img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .btn-google:hover {
+            background-color: #eee;
+        }
+
+        .signup-link, .forgot-password-link {
+            font-size: 14px;
+        }
+
+        .signup-link a, .forgot-password-link a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .options-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .remember-me input {
+            width: auto;
+            margin: 0;
+            padding: 0;
+        }
+
+        .remember-me label {
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .error {
+            color: red;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <form method="POST" action="{{ url_for('giris') }}">
+        <h1>Giriş Yap</h1>
+        {% if hata %}
+            <p class="error">{{ hata }}</p>
+        {% endif %}
+        {% if info %}
+            <p style="color: #007bff; margin-bottom: 15px; font-size: 14px;">{{ info }}</p>
+        {% endif %}
+        <input type="email" id="email" name="email" placeholder="E-posta">
+        <input type="password" id="sifre" name="sifre" placeholder="Şifre">
+        
+        <div class="options-row">
+            <div class="remember-me">
+                <input type="checkbox" id="beni_hatirla" name="beni_hatirla">
+                <label for="beni_hatirla">Beni Hatırla</label>
+            </div>
+            <a href="{{ url_for('sifremi_unuttum') }}" class="forgot-password-link">Şifremi Unuttum?</a>
+        </div>
+
+        <button type="submit" class="btn-primary">Devam Et</button>
+
+        <div class="separator">YA DA</div>
+
+        <a href="{{ url_for('google_giris') }}" class="btn-google">
+            <img src="https://www.google.com/favicon.ico" alt="Google Logo"> Google ile Devam Et
+        </a>
+
+        <div class="signup-link">
+            Hesabın yok mu? <a href="{{ url_for('kayit') }}">Şimdi Kaydol</a>
+        </div>
+    </form>
+</body>
+</html>

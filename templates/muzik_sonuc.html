@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Müzik Önerileri - Listoria</title>
+    <style>
+        :root {
+            --background-color: #f9f9f9;
+            --text-color: #3c4043;
+            --shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            --primary-color: #4285f4;
+            --secondary-bg: #e8f0fe;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+        }
+
+        .header p {
+            font-size: 1em;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .user-music {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .user-music h3 {
+            margin: 0 0 15px 0;
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .music-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .music-tag {
+            background: var(--secondary-bg);
+            color: var(--primary-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .results-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+        }
+
+        .recommendations-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .music-card {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s;
+        }
+
+        .music-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .music-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: #333;
+        }
+
+        .music-artist {
+            font-size: 16px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .music-genre {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+
+        .age-notice {
+            background: #fef9e7;
+            border: 1px solid #f9e79f;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            color: #a08c4a;
+        }
+
+        .back-btn {
+            display: inline-block;
+            background: #ffffff;
+            color: var(--text-color);
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 25px;
+            margin-bottom: 20px;
+            transition: background 0.3s;
+            box-shadow: var(--shadow);
+        }
+
+        .back-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: var(--shadow);
+        }
+
+        .primary-btn {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .secondary-btn {
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e1e5e9;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .results-container {
+                padding: 25px;
+            }
+            
+            .recommendations-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('dashboard') }}" class="back-btn">← Ana Sayfaya Dön</a>
+        
+        <div class="header">
+            <h1>Müzik Önerileri</h1>
+            <p>Basit liste görünümü</p>
+        </div>
+
+        {% if yas and yas < 18 %}
+        <div class="age-notice">
+            🎯 Yaşına uygun müzik önerileri seçtim
+        </div>
+        {% endif %}
+
+        <div class="user-music">
+            <h3>Sevdiğin Müzikler</h3>
+            <div class="music-tags">
+                {% for muzik in kullanici_muzikleri %}
+                <span class="music-tag">{{ muzik }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if spotify_playlist and oneri_turu == 'spotify_playlist' %}
+        <div class="playlist-container" style="background: white; border-radius: 20px; padding: 30px; margin-bottom: 30px; box-shadow: var(--shadow);">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #1db954;">
+                🎵 Spotify Playlist Oluşturuldu!
+            </h2>
+            <div class="playlist-card">
+                <div class="playlist-info" style="text-align: center;">
+                    <h3 style="color: #333; margin-bottom: 10px;">{{ spotify_playlist.name }}</h3>
+                    <p style="color: #666; margin-bottom: 15px;">{{ spotify_playlist.description }}</p>
+                    <p style="font-size: 14px; color: #666;">{{ spotify_playlist.tracks|length }} şarkı</p>
+                    
+                    {% if spotify_playlist.demo %}
+                    <div class="demo-notice" style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 12px; margin: 15px 0; color: #856404; font-size: 14px;">
+                        ⚠️ Demo Modu: Gerçek Spotify API'si hazır olduğunda otomatik playlist oluşturulacak
+                    </div>
+                    {% endif %}
+                    
+                    <div class="playlist-actions" style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                        <a href="{{ spotify_playlist.url }}" class="spotify-btn" target="_blank" style="background: #1db954; color: white; padding: 12px 25px; border-radius: 25px; text-decoration: none; font-weight: 600; transition: all 0.3s;">
+                            🎵 Spotify'da Aç
+                        </a>
+                        <button class="copy-btn" onclick="copyPlaylistTracks()" style="background: #f8f9fa; color: #333; border: 2px solid #e1e5e9; padding: 12px 25px; border-radius: 25px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                            📋 Şarkı Listesini Kopyala
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="playlist-tracks" style="margin-top: 25px;">
+                    <h4 style="color: #333; margin-bottom: 15px;">Playlist İçeriği:</h4>
+                    <div id="trackList" style="max-height: 200px; overflow-y: auto; padding: 15px; background: #f8f9fa; border-radius: 12px; border: 1px solid #e1e5e9;">
+                        {% for track in spotify_playlist.tracks %}
+                        <div style="padding: 8px 0; border-bottom: 1px solid #ddd; color: #555;">{{ loop.index }}. {{ track }}</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="results-container">
+            <div class="recommendations-grid">
+                <ul style="list-style:none; padding:0; margin:0; width:100%">
+                    {% for oneri in oneriler %}
+                    <li class="music-card">
+                        <div class="music-title">{{ oneri.baslik }}</div>
+                        <div class="music-artist">{{ oneri.sanatci }}</div>
+                        <div class="music-genre">{{ oneri.tur }}</div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="action-buttons">
+                <a href="{{ url_for('oneri_sayfasi', kategori='muzik') }}" class="action-btn secondary-btn">
+                    🔄 Yeni Öneri Al
+                </a>
+                <a href="{{ url_for('spotify_playlist_olustur') }}" class="action-btn primary-btn" id="spotify-btn">
+                    🎵 Spotify Playlist Oluştur
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="action-btn secondary-btn">
+                    🏠 Ana Sayfaya Dön
+                </a>
+            </div>
+            
+            <script>
+                // Spotify butonunun çalıştığından emin olmak için
+                document.getElementById('spotify-btn').addEventListener('click', function(e) {
+                    console.log('Spotify playlist oluşturuluyor...');
+                });
+                
+                // Playlist şarkılarını kopyala
+                function copyPlaylistTracks() {
+                    const trackList = document.getElementById('trackList');
+                    const tracks = trackList.innerText;
+                    
+                    navigator.clipboard.writeText(tracks).then(function() {
+                        // Başarı mesajı
+                        const btn = document.querySelector('.copy-btn');
+                        const originalText = btn.innerText;
+                        btn.innerText = '✓ Kopyalandı!';
+                        btn.style.background = '#28a745';
+                        btn.style.color = 'white';
+                        
+                        setTimeout(() => {
+                            btn.innerText = originalText;
+                            btn.style.background = '#f8f9fa';
+                            btn.style.color = '#333';
+                        }, 2000);
+                    }, function(err) {
+                        console.error('Kopyalama hatası: ', err);
+                        alert('Şarkı listesi kopyalanamadı');
+                    });
+                }
+            </script>
+        </div>
+    </div>
+</body>
+</html>

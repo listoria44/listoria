@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitap Önerileri - Listoria</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .book-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .page-range {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .submit-btn {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .age-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            color: #856404;
+        }
+
+        .back-btn {
+            display: inline-block;
+            color: #333;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            background: #f1f3f4;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .book-inputs, .page-range {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .form-container {
+                padding: 25px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('dashboard') }}" class="back-btn">← Geri Dön</a>
+        
+        <div class="header">
+            <h1>📚 Roman Önerileri</h1>
+            <p>Sevdiğin romanları gir, sana benzer eserler önereyim!</p>
+        </div>
+
+        {% if yas and yas < 18 %}
+        <div class="age-notice">
+            🎯 Yaşına uygun roman önerileri seçeceğim
+        </div>
+        {% endif %}
+
+        <div class="form-container">
+            <form action="{{ url_for('kitap_oneri_al') }}" method="POST">
+                <div class="form-group">
+                    <label for="kitap1">Sevdiğin 1. Roman *</label>
+                    <input type="text" id="kitap1" name="kitap1" required placeholder="Örn: Suç ve Ceza">
+                </div>
+
+                <div class="form-group">
+                    <label for="kitap2">Sevdiğin 2. Roman *</label>
+                    <input type="text" id="kitap2" name="kitap2" required placeholder="Örn: 1984">
+                </div>
+
+                <div class="form-group">
+                    <label for="kitap3">Sevdiğin 3. Roman *</label>
+                    <input type="text" id="kitap3" name="kitap3" required placeholder="Örn: Sefiller">
+                </div>
+
+                <div class="book-inputs">
+                    <div class="form-group">
+                        <label for="kitap4">Sevdiğin 4. Roman</label>
+                        <input type="text" id="kitap4" name="kitap4" placeholder="Opsiyonel">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="kitap5">Sevdiğin 5. Roman</label>
+                        <input type="text" id="kitap5" name="kitap5" placeholder="Opsiyonel">
+                    </div>
+                </div>
+
+                <div class="page-range">
+                    <div class="form-group">
+                        <label for="min_sayfa">Minimum Sayfa Sayısı</label>
+                        <input type="number" id="min_sayfa" name="min_sayfa" min="1" max="2000" placeholder="Örn: 100">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="max_sayfa">Maksimum Sayfa Sayısı</label>
+                        <input type="number" id="max_sayfa" name="max_sayfa" min="1" max="2000" placeholder="Örn: 500">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="tur">Tercih Ettiğin Roman Türü</label>
+                    <select id="tur" name="tur">
+                        <option value="hepsi">Hepsi</option>
+                        <option value="Roman">Klasik Roman</option>
+                        <option value="Wattpad">Genç Romanlar (Wattpad Tarzı)</option>
+                        <option value="Polisiye">Polisiye</option>
+                        <option value="Romantik">Romantik</option>
+                        <option value="Tarihsel">Tarihsel Roman</option>
+                        <option value="Psikolojik">Psikolojik</option>
+                        <option value="Macera">Macera</option>
+                        <option value="Kişisel Gelişim">Kişisel Gelişim</option>
+                        <option value="Biyografi">Biyografi/Otobiyografi</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="notlar">Ek Notlar (Ruh hali, aktivite, vs.)</label>
+                    <textarea id="notlar" name="notlar" rows="4" placeholder="Örn: Akşam okumak için, seyahatte, hızlı okuma, derin düşünce..."></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    📚 Roman Önerileri Al
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Aynı kitapların girilmesini engelle
+        function validateBooks() {
+            const bookInputs = ['kitap1', 'kitap2', 'kitap3', 'kitap4', 'kitap5'];
+            const bookValues = [];
+            
+            for (let id of bookInputs) {
+                const value = document.getElementById(id).value.trim().toLowerCase();
+                if (value) {
+                    if (bookValues.includes(value)) {
+                        alert('⚠️ Aynı romanı birden fazla kez girdiniz! Lütfen farklı romanlar girin.');
+                        return false;
+                    }
+                    bookValues.push(value);
+                }
+            }
+            
+            if (bookValues.length < 3) {
+                alert('⚠️ En az 3 roman girmelisiniz!');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Form submit event
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (!validateBooks()) {
+                e.preventDefault();
+            }
+        });
+        
+        // Real-time validation
+        const inputs = ['kitap1', 'kitap2', 'kitap3', 'kitap4', 'kitap5'];
+        inputs.forEach(id => {
+            document.getElementById(id).addEventListener('blur', function() {
+                const currentValue = this.value.trim().toLowerCase();
+                if (!currentValue) return;
+                
+                let duplicateFound = false;
+                inputs.forEach(otherId => {
+                    if (otherId !== id) {
+                        const otherValue = document.getElementById(otherId).value.trim().toLowerCase();
+                        if (otherValue && currentValue === otherValue) {
+                            duplicateFound = true;
+                        }
+                    }
+                });
+                
+                if (duplicateFound) {
+                    this.style.borderColor = '#ff4757';
+                    this.style.backgroundColor = '#ffe8e8';
+                } else {
+                    this.style.borderColor = '#2ed573';
+                    this.style.backgroundColor = '#e8ffe8';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

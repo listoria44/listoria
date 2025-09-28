@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dizi Önerileri - Listoria</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #ffffff;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: #333;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .series-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .submit-btn {
+            background: #000;
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .age-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+            color: #856404;
+        }
+
+        .back-btn {
+            display: inline-block;
+            color: #333;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            background: #f1f3f4;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .series-inputs {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .form-container {
+                padding: 25px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <a href="{{ url_for('dashboard') }}" class="back-btn">← Geri Dön</a>
+        
+        <div class="header">
+            <h1>📺 Dizi Önerileri</h1>
+            <p>Sevdiğin dizileri gir, sana benzer yapımlar önereyim!</p>
+        </div>
+
+        {% if yas and yas < 18 %}
+        <div class="age-notice">
+            🎯 Yaşına uygun dizi önerileri seçeceğim
+        </div>
+        {% endif %}
+
+        <div class="form-container">
+            <form action="{{ url_for('dizi_oneri_al') }}" method="POST">
+                <div class="form-group">
+                    <label for="dizi1">Sevdiğin 1. Dizi *</label>
+                    <input type="text" id="dizi1" name="dizi1" required placeholder="Örn: Breaking Bad">
+                </div>
+
+                <div class="form-group">
+                    <label for="dizi2">Sevdiğin 2. Dizi *</label>
+                    <input type="text" id="dizi2" name="dizi2" required placeholder="Örn: Game of Thrones">
+                </div>
+
+                <div class="form-group">
+                    <label for="dizi3">Sevdiğin 3. Dizi *</label>
+                    <input type="text" id="dizi3" name="dizi3" required placeholder="Örn: Stranger Things">
+                </div>
+
+                <div class="series-inputs">
+                    <div class="form-group">
+                        <label for="dizi4">Sevdiğin 4. Dizi</label>
+                        <input type="text" id="dizi4" name="dizi4" placeholder="Opsiyonel">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dizi5">Sevdiğin 5. Dizi</label>
+                        <input type="text" id="dizi5" name="dizi5" placeholder="Opsiyonel">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="tur">Tercih Ettiğin Dizi Türü</label>
+                    <select id="tur" name="tur">
+                        <option value="hepsi">Hepsi</option>
+                        <option value="Drama">Drama</option>
+                        <option value="Komedi">Komedi</option>
+                        <option value="Aksiyon">Aksiyon</option>
+                        <option value="Bilim Kurgu">Bilim Kurgu</option>
+                        <option value="Fantastik">Fantastik</option>
+                        <option value="Gerilim">Gerilim</option>
+                        <option value="Polisiye">Polisiye</option>
+                        <option value="Romantik">Romantik</option>
+                        <option value="Tarihsel">Tarihsel</option>
+                        <option value="Belgesel">Belgesel</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="notlar">Ek Notlar (Ruh hali, aktivite, vs.)</label>
+                    <textarea id="notlar" name="notlar" rows="4" placeholder="Örn: Akşam izlemek için, binge-watch, aile ile izlemek için..."></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    📺 Dizi Önerileri Al
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Aynı dizilerin girilmesini engelle
+        function validateSeries() {
+            const seriesInputs = ['dizi1', 'dizi2', 'dizi3', 'dizi4', 'dizi5'];
+            const seriesValues = [];
+            
+            for (let id of seriesInputs) {
+                const value = document.getElementById(id).value.trim().toLowerCase();
+                if (value) {
+                    if (seriesValues.includes(value)) {
+                        alert('⚠️ Aynı diziyi birden fazla kez girdiniz! Lütfen farklı diziler girin.');
+                        return false;
+                    }
+                    seriesValues.push(value);
+                }
+            }
+            
+            if (seriesValues.length < 3) {
+                alert('⚠️ En az 3 dizi girmelisiniz!');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Form submit event
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (!validateSeries()) {
+                e.preventDefault();
+            }
+        });
+    </script>
+</body>
+</html>

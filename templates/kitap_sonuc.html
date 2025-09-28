@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listoria - Kitap Önerilerin</title>
+    <style>
+        :root {
+            --background-color: #f9f9f9;
+            --sidebar-color: #f0f4f9;
+            --text-color: #3c4043;
+            --shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+            --primary-color: #4285f4;
+            --success-color: #34a853;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-color);
+            padding: 24px 16px;
+            border-right: 1px solid #dadce0;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .logo-container {
+            font-size: 28px;
+            font-weight: 500;
+            color: #333;
+            padding: 8px 12px;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: -0.5px;
+            margin-bottom: 24px;
+        }
+
+        .nav-button {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            background-color: #ffffff;
+            color: #333;
+            border: 1px solid #dadce0;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            margin-bottom: 12px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .nav-button:hover {
+            background-color: #f8f8f8;
+            box-shadow: var(--shadow);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            color: var(--success-color);
+        }
+
+        .header p {
+            font-size: 18px;
+            color: #666;
+            margin: 0;
+        }
+
+        /* User Books Section */
+        .user-books {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow);
+        }
+
+        .user-books h3 {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 16px 0;
+            color: var(--text-color);
+        }
+
+        .user-books-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .user-book-tag {
+            background-color: #e8f0fe;
+            color: var(--primary-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Recommendations */
+        .recommendations {
+            display: grid;
+            gap: 24px;
+        }
+
+        .book-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .book-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .book-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .book-info h4 {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0 0 4px 0;
+            color: var(--text-color);
+        }
+
+        .book-info .author {
+            font-size: 16px;
+            color: #666;
+            margin: 0 0 8px 0;
+        }
+
+        .book-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .book-meta span {
+            background-color: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        .book-description {
+            margin: 16px 0;
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        .recommendation-reason {
+            background-color: #f0f8ff;
+            border-left: 4px solid var(--primary-color);
+            padding: 12px 16px;
+            margin-top: 16px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .recommendation-reason strong {
+            color: var(--primary-color);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .no-results h3 {
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #3367d6;
+        }
+
+        .btn-secondary {
+            background-color: white;
+            color: var(--text-color);
+            border: 1px solid #dadce0;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f8f9fa;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-container">
+                Listoria
+            </div>
+            <a href="/dashboard" class="nav-button">
+                🏠 Ana Sayfa
+            </a>
+            <a href="/oneri/kitap" class="nav-button">
+                🔄 Yeni Kitap Arama
+            </a>
+            <a href="/oneri/dizi" class="nav-button">
+                📺 Dizi Önerileri
+            </a>
+            <a href="/oneri/film" class="nav-button">
+                🎬 Film Önerileri
+            </a>
+            <a href="/oneri/muzik" class="nav-button">
+                🎵 Müzik Önerileri
+            </a>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header">
+                <h1>Kitap Önerileri</h1>
+                <p>Beğendiklerine göre basit liste</p>
+            </div>
+
+            <div class="user-books">
+                <h3>Beğendiğin Kitaplar</h3>
+                <div class="user-books-list">
+                    {% for kitap in kullanici_kitaplari %}
+                        <span class="user-book-tag">{{ kitap }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="recommendations">
+                {% if oneriler %}
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                        {% for oneri in oneriler %}
+                        <li class="book-card">
+                            <div class="book-info">
+                                <h4 style="margin:0 0 6px 0;">{{ oneri.baslik }}</h4>
+                                <div class="author">{{ oneri.yazar }}</div>
+                                <div class="book-meta" style="margin-top:8px;">
+                                    <span>{{ oneri.sayfa }} sayfa</span>
+                                    <span>{{ oneri.tur }}</span>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="no-results">
+                        <h3>Sonuç bulunamadı</h3>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="action-buttons">
+                <a href="/oneri/kitap" class="btn btn-primary">Yeni Arama</a>
+                <a href="/dashboard" class="btn btn-secondary">Ana Sayfa</a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
