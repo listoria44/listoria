@@ -1758,7 +1758,3 @@ def spotify_playlist_olustur():
         app.logger.error(f"Playlist oluşturma API hatası: {str(e)}")
         return jsonify({'error': 'Playlist oluşturulamadı'}), 500
 
-# ============= ANA ÇALIŞTIRMA =============
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
