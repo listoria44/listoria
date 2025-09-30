@@ -15,6 +15,7 @@ import base64
 import urllib.parse
 from config import Config
 import time
+import psycopg2
 
 # Güvenli olmayan bağlantılar için OAuth2 kütüphanesine izin ver
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -47,9 +48,18 @@ def get_google_provider_cfg():
     return requests.get(GOOGLE_DISCOVERY_URL).json()
 
 def get_db_connection():
-    conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+    # Eğer DATABASE_URL ortam değişkeni varsa (Render'daysa), PostgreSQL'e bağlan
+    if 'DATABASE_URL' in os.environ:
+        # URL'yi ortam değişkeninden çek ve PostgreSQL'e bağlan
+        conn = psycopg2.connect(os.environ['DATABASE_URL'])
+        conn.autocommit = True 
+        return conn
+    
+    # Yoksa (yerel bilgisayardaysan), SQLite'a bağlanmaya devam et
+    else:
+        conn = sqlite3.connect('database.db')
+        conn.row_factory = sqlite3.Row
+        return conn
 
 def create_db_table():
     conn = get_db_connection()
