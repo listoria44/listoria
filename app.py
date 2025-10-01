@@ -395,11 +395,24 @@ def oneri_sayfasi(kategori):
     
     # Kullanıcının yaşını al
     conn = get_db_connection()
-    kullanici = conn.execute('SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = ?', 
-                           (session['kullanici_adi'],)).fetchone()
+    
+    if 'DATABASE_URL' in os.environ:
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = %s', 
+            (session['kullanici_adi'],)
+        )
+        kullanici = cursor.fetchone()
+        cursor.close()
+    else:
+        kullanici = conn.execute(
+            'SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = ?', 
+            (session['kullanici_adi'],)
+        ).fetchone()
+    
     conn.close()
     
-    # Yaş hesaplama (basit bir yaklaşım)
+    # Yaş hesaplama
     yas = None
     if kullanici and kullanici['dogum_tarihi'] != 'N/A':
         try:
@@ -410,7 +423,6 @@ def oneri_sayfasi(kategori):
             yas = None
     
     if kategori == 'kitap':
-        # Önceki arama kriterlerini al (varsa)
         son_arama = session.get('son_arama', {})
         return render_template('kitap_oneri.html', yas=yas, son_arama=son_arama)
     elif kategori == 'dizi':
@@ -447,8 +459,21 @@ def kitap_oneri_al():
     
     # Kullanıcının yaşını al
     conn = get_db_connection()
-    kullanici = conn.execute('SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = ?', 
-                           (session['kullanici_adi'],)).fetchone()
+    
+    if 'DATABASE_URL' in os.environ:
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = %s', 
+            (session['kullanici_adi'],)
+        )
+        kullanici = cursor.fetchone()
+        cursor.close()
+    else:
+        kullanici = conn.execute(
+            'SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = ?', 
+            (session['kullanici_adi'],)
+        ).fetchone()
+    
     conn.close()
     
     yas = None
@@ -505,8 +530,21 @@ def film_oneri_al():
     
     # Kullanıcının yaşını al
     conn = get_db_connection()
-    kullanici = conn.execute('SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = ?', 
-                           (session['kullanici_adi'],)).fetchone()
+    
+    if 'DATABASE_URL' in os.environ:
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = %s', 
+            (session['kullanici_adi'],)
+        )
+        kullanici = cursor.fetchone()
+        cursor.close()
+    else:
+        kullanici = conn.execute(
+            'SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = ?', 
+            (session['kullanici_adi'],)
+        ).fetchone()
+    
     conn.close()
     
     yas = None
@@ -545,8 +583,21 @@ def dizi_oneri_al():
     
     # Kullanıcının yaşını al
     conn = get_db_connection()
-    kullanici = conn.execute('SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = ?', 
-                           (session['kullanici_adi'],)).fetchone()
+    
+    if 'DATABASE_URL' in os.environ:
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = %s', 
+            (session['kullanici_adi'],)
+        )
+        kullanici = cursor.fetchone()
+        cursor.close()
+    else:
+        kullanici = conn.execute(
+            'SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = ?', 
+            (session['kullanici_adi'],)
+        ).fetchone()
+    
     conn.close()
     
     yas = None
@@ -577,7 +628,7 @@ def muzik_oneri_al():
     muzik5 = request.form.get('muzik5')
     tur = request.form.get('tur')
     notlar = request.form.get('notlar', '')
-    oneri_turu = request.form.get('oneri_turu', 'standard')  # Yeni eklenen
+    oneri_turu = request.form.get('oneri_turu', 'standard')
     
     kullanici_muzikleri = [muzik for muzik in [muzik1, muzik2, muzik3, muzik4, muzik5] if muzik and muzik.strip()]
     
@@ -586,8 +637,21 @@ def muzik_oneri_al():
     
     # Kullanıcının yaşını al
     conn = get_db_connection()
-    kullanici = conn.execute('SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = ?', 
-                           (session['kullanici_adi'],)).fetchone()
+    
+    if 'DATABASE_URL' in os.environ:
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = %s', 
+            (session['kullanici_adi'],)
+        )
+        kullanici = cursor.fetchone()
+        cursor.close()
+    else:
+        kullanici = conn.execute(
+            'SELECT dogum_tarihi FROM kullanicilar WHERE kullanici_adi = ?', 
+            (session['kullanici_adi'],)
+        ).fetchone()
+    
     conn.close()
     
     yas = None
@@ -618,7 +682,6 @@ def muzik_oneri_al():
     except Exception as e:
         app.logger.error(f"Müzik öneri hatası: {str(e)}")
         return render_template('muzik_oneri.html', hata=f"Öneri oluşturulurken bir hata oluştu: {str(e)}", yas=yas)
-
 # ============= API ENTEGRASYONLARı =============
 
 def fetch_google_books_api(query, max_results=10):
