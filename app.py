@@ -51,41 +51,59 @@ def get_google_provider_cfg():
 def get_db_connection():
     # Render ortamında (DATABASE_URL varsa)
     if 'DATABASE_URL' in os.environ:
-        # 1. URL'yi al ve parçalara ayır
-        url = urlparse(os.environ['DATABASE_URL'])
-        
-        # 2. Şifredeki özel karakterleri düzelt (URL Encoding)
-        password = quote_plus(url.password)
-        
-        # 3. Port numarası yoksa 5432'yi kullan (YENİ SATIR 1)
-        port = url.port if url.port else 5432
-        
-        # 4. Yeni, güvenli URL'yi oluştur (YENİ SATIR 2)
-        new_url = f"postgresql://{url.username}:{password}@{url.hostname}:{port}{url.path}?sslmode=require"
+        try:
+            # Dosyanın başındaki import'lar kullanılıyor.
+            url = urlparse(os.environ['DATABASE_URL'])
+            password = quote_plus(url.password)
+            port = url.port if url.port else 5432
+            
+            new_url = f"postgresql://{url.username}:{password}@{url.hostname}:{port}{url.path}?sslmode=require"
 
-        # 5. PostgreSQL'e bağlan
-        conn = psycopg2.connect(new_url)
-        conn.autocommit = True
-        return conn
-    
+            conn = psycopg2.connect(new_url)
+            conn.autocommit = False 
+            return conn
+            
+        except Exception as e:
+            app.logger.error(f"PostgreSQL bağlantı hatası: {e}")
+            return None 
+            
     # Yerel geliştirme ortamındaysa SQLite'a bağlan
     else:
+        # Dosyanın başındaki import'lar kullanılıyor.
         conn = sqlite3.connect('database.db')
         conn.row_factory = sqlite3.Row
         return conn
 
 def create_db_table():
     conn = get_db_connection()
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS kullanicilar (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            email TEXT NOT NULL UNIQUE,
-            kullanici_adi TEXT,
-            sifre TEXT NOT NULL,
-            dogum_tarihi TEXT
-        );
-    ''')
-    conn.close()
+    if conn:
+        try:
+            # PostgreSQL için cursor (imleç) kullanılır
+            cur = conn.cursor() 
+            
+            # Tabloyu oluşturma sorgusu
+            cur.execute('''
+                CREATE TABLE IF NOT EXISTS kullanicilar (
+                    id SERIAL PRIMARY KEY,
+                    email TEXT NOT NULL UNIQUE,
+                    kullanici_adi TEXT,
+                    sifre TEXT NOT NULL,
+                    dogum_tarihi TEXT
+                );
+            ''')
+            
+            # İşlemi onayla (commit)
+            conn.commit()
+            
+        except Exception as e:
+            app.logger.error(f"Veritabanı tablosu oluşturulurken hata: {e}")
+            conn.rollback() 
+            
+        finally:
+            # Cursor'ı kapatmayı garanti et
+            if 'cur' in locals() and cur:
+                 cur.close()
+            conn.close()
 
 create_db_table()
 
@@ -135,9 +153,24 @@ def dashboard():
         # Kullanıcı bilgisini ve yaşını şablona ilet (profil için)
         kullanici_adi = session.get('kullanici_adi')
         conn = get_db_connection()
-        row = conn.execute('SELECT kullanici_adi, dogum_tarihi, email FROM kullanicilar WHERE kullanici_adi = ?', (kullanici_adi,)).fetchone()
+        
+        # PostgreSQL için cursor kullan, SQLite için direkt execute
+        if 'DATABASE_URL' in os.environ:
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT kullanici_adi, dogum_tarihi, email FROM kullanicilar WHERE kullanici_adi = %s', 
+                (kullanici_adi,)
+            )
+            row = cursor.fetchone()
+            cursor.close()
+        else:
+            row = conn.execute(
+                'SELECT kullanici_adi, dogum_tarihi, email FROM kullanicilar WHERE kullanici_adi = ?', 
+                (kullanici_adi,)
+            ).fetchone()
+        
         conn.close()
-
+        
         yas = None
         if row and row['dogum_tarihi'] and row['dogum_tarihi'] != 'N/A':
             try:
@@ -145,7 +178,7 @@ def dashboard():
                 yas = 2024 - dogum_yili
             except Exception:
                 yas = None
-
+        
         profil = {
             'kullanici_adi': row['kullanici_adi'] if row else kullanici_adi,
             'email': row['email'] if row else None,
@@ -162,7 +195,7 @@ def dashboard():
             'spotify': config.has_spotify_config,
             'email': config.has_email_config
         }
-
+        
         return render_template('recommender.html', profil=profil, api_durumu=api_durumu)
     else:
         return redirect(url_for('home'))
@@ -177,9 +210,24 @@ def giris():
         return render_template('index.html', hata="Lütfen tüm alanları doldurunuz.")
     
     conn = get_db_connection()
-    kullanici = conn.execute('SELECT * FROM kullanicilar WHERE email = ? AND sifre = ?', (email, sifre)).fetchone()
+    
+    # PostgreSQL için cursor kullan, SQLite için direkt execute
+    if 'DATABASE_URL' in os.environ:
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT * FROM kullanicilar WHERE email = %s AND sifre = %s', 
+            (email, sifre)
+        )
+        kullanici = cursor.fetchone()
+        cursor.close()
+    else:
+        kullanici = conn.execute(
+            'SELECT * FROM kullanicilar WHERE email = ? AND sifre = ?', 
+            (email, sifre)
+        ).fetchone()
+    
     conn.close()
-
+    
     if kullanici:
         session['logged_in'] = True
         session['kullanici_adi'] = kullanici['kullanici_adi']
@@ -204,6 +252,54 @@ def kayit_ol():
         if not email or not sifre or not dogum_tarihi or not kullanici_adi:
             return render_template('register.html', hata="Lütfen tüm alanları doldurunuz.")
         
+        conn = get_db_connection()
+        
+        # PostgreSQL için cursor kullan, SQLite için direkt execute
+        if 'DATABASE_URL' in os.environ:
+            cursor = conn.cursor()
+            
+            # Kullanıcı var mı kontrol et
+            cursor.execute(
+                'SELECT * FROM kullanicilar WHERE email = %s OR kullanici_adi = %s',
+                (email, kullanici_adi)
+            )
+            mevcut_kullanici = cursor.fetchone()
+            
+            if mevcut_kullanici:
+                cursor.close()
+                conn.close()
+                return render_template('register.html', hata="Bu e-posta veya kullanıcı adı zaten kullanılıyor!")
+            
+            # Yeni kullanıcı ekle
+            cursor.execute(
+                'INSERT INTO kullanicilar (email, kullanici_adi, sifre, dogum_tarihi) VALUES (%s, %s, %s, %s)',
+                (email, kullanici_adi, sifre, dogum_tarihi)
+            )
+            conn.commit()
+            cursor.close()
+        else:
+            # SQLite için
+            mevcut_kullanici = conn.execute(
+                'SELECT * FROM kullanicilar WHERE email = ? OR kullanici_adi = ?',
+                (email, kullanici_adi)
+            ).fetchone()
+            
+            if mevcut_kullanici:
+                conn.close()
+                return render_template('register.html', hata="Bu e-posta veya kullanıcı adı zaten kullanılıyor!")
+            
+            conn.execute(
+                'INSERT INTO kullanicilar (email, kullanici_adi, sifre, dogum_tarihi) VALUES (?, ?, ?, ?)',
+                (email, kullanici_adi, sifre, dogum_tarihi)
+            )
+            conn.commit()
+        
+        conn.close()
+        
+        return redirect(url_for('home'))
+        
+    except Exception as e:
+        return render_template('register.html', hata=f"Kayıt sırasında bir hata oluştu: {str(e)}")
         # Yaş kontrolü - artık 13+ (gençler için)
         from datetime import datetime
         try:
@@ -287,10 +383,27 @@ def dogrula():
         kullanici_adi = verification_codes[email]['kullanici_adi']
         dogum_tarihi = verification_codes[email]['dogum_tarihi']
         
+        # POSTGRESQL'E UYUMLU KAYIT İŞLEMİ (Eski conn.execute bloğu yerine bu geliyor)
         conn = get_db_connection()
-        conn.execute('INSERT INTO kullanicilar (email, kullanici_adi, sifre, dogum_tarihi) VALUES (?, ?, ?, ?)', (email, kullanici_adi, sifre, dogum_tarihi))
-        conn.commit()
-        conn.close()
+        if conn:
+            try:
+                cur = conn.cursor()
+                # PostgreSQL'de kayıt işlemi cursor üzerinden yapılır ve %s kullanılır
+                cur.execute('INSERT INTO kullanicilar (email, kullanici_adi, sifre, dogum_tarihi) VALUES (%s, %s, %s, %s)', 
+                            (email, kullanici_adi, sifre, dogum_tarihi))
+                
+                conn.commit()
+                cur.close()
+                
+            except Exception as e:
+                # Eğer benzersiz kısıtlama hatası alırsak (kullanıcı zaten kayıtlıysa)
+                app.logger.error(f"Kayıt işlemi sırasında veritabanı hatası: {e}")
+                conn.rollback()
+                return render_template('verification.html', email=email, hata="Kayıt başarısız oldu (Kullanıcı zaten mevcut veya veritabanı hatası). Lütfen tekrar deneyin.")
+            
+            finally:
+                conn.close()
+        # KAYIT İŞLEMİ SONU
         
         del verification_codes[email]
         
