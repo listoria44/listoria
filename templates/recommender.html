@@ -368,7 +368,6 @@
             }
         }
     </style>
-    <!-- Gerekli fontlar için Google Fonts linkleri -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Montserrat:wght@400;500;700&display=swap" rel="stylesheet">
@@ -387,9 +386,9 @@
             <!-- Profil Kartı -->
             <div class="profile-card">
                 <div class="profile-avatar">
-                    {{ session['kullanici_adi'][0].upper() }}
+                    {{ profil.kullanici_adi[0].upper() if profil.kullanici_adi else 'K' }}
                 </div>
-                <div class="profile-name">{{ session['kullanici_adi'] }}</div>
+                <div class="profile-name">{{ profil.kullanici_adi or 'Kullanıcı' }}</div>
                 <div class="profile-email">{{ profil.email or 'Email bilgisi yok' }}</div>
                 {% if profil.yas %}
                 <div class="profile-age">{{ profil.yas }} yaşında</div>
@@ -427,14 +426,13 @@
         <!-- Ana İçerik -->
         <main class="main-content">
             <div class="header">
-                <h1>Merhaba {{ session['kullanici_adi'] }}!</h1>
+                <h1>Merhaba {{ profil.kullanici_adi or 'Kullanıcı' }}!</h1>
                 <p>Listoria'ya hoş geldin! Senin için en iyi önerileri hazırladık</p>
                 
                 <div class="welcome-message">
                     {% if profil.yas %}
                         {% if profil.yas < 18 %}
                             🎯 Yaşına uygun içerikler seçtik
-                        {% else %}
                         {% endif %}
                     {% else %}
                         🎯 Kişiselleştirilmiş öneriler için profilini tamamla
@@ -499,11 +497,9 @@
 
     <script>
         function selectCategory(category) {
-            // Kategori seçildiğinde ilgili sayfaya yönlendir
             window.location.href = `/oneri/${category}`;
         }
 
-        // Sayfa yüklendiğinde animasyon ekle
         document.addEventListener('DOMContentLoaded', function() {
             const cards = document.querySelectorAll('.category-card');
             cards.forEach((card, index) => {

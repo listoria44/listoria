@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
-from datetime import timedelta
+from datetime import timedelta, datetime  # datetime eklendi
 import sqlite3
 import random
 import smtplib
@@ -16,6 +16,7 @@ import urllib.parse
 from config import Config
 import time
 import psycopg2
+from psycopg2.extras import RealDictCursor  # Bu da eklendi
 from urllib.parse import urlparse, quote_plus
 
 # Güvenli olmayan bağlantılar için OAuth2 kütüphanesine izin ver
@@ -52,14 +53,14 @@ def get_db_connection():
     # Render ortamında (DATABASE_URL varsa)
     if 'DATABASE_URL' in os.environ:
         try:
-            # Dosyanın başındaki import'lar kullanılıyor.
             url = urlparse(os.environ['DATABASE_URL'])
             password = quote_plus(url.password)
             port = url.port if url.port else 5432
             
             new_url = f"postgresql://{url.username}:{password}@{url.hostname}:{port}{url.path}?sslmode=require"
 
-            conn = psycopg2.connect(new_url)
+            # RealDictCursor eklendi - bu önemli!
+            conn = psycopg2.connect(new_url, cursor_factory=RealDictCursor)
             conn.autocommit = False 
             return conn
             
@@ -69,7 +70,6 @@ def get_db_connection():
             
     # Yerel geliştirme ortamındaysa SQLite'a bağlan
     else:
-        # Dosyanın başındaki import'lar kullanılıyor.
         conn = sqlite3.connect('database.db')
         conn.row_factory = sqlite3.Row
         return conn
@@ -200,6 +200,8 @@ def dashboard():
     else:
         return redirect(url_for('home'))
 
+
+
 @app.route('/giris', methods=['POST'])
 def giris():
     email = request.form['email']
@@ -252,74 +254,40 @@ def kayit_ol():
         if not email or not sifre or not dogum_tarihi or not kullanici_adi:
             return render_template('register.html', hata="Lütfen tüm alanları doldurunuz.")
         
-        conn = get_db_connection()
-        
-        # PostgreSQL için cursor kullan, SQLite için direkt execute
-        if 'DATABASE_URL' in os.environ:
-            cursor = conn.cursor()
-            
-            # Kullanıcı var mı kontrol et
-            cursor.execute(
-                'SELECT * FROM kullanicilar WHERE email = %s OR kullanici_adi = %s',
-                (email, kullanici_adi)
-            )
-            mevcut_kullanici = cursor.fetchone()
-            
-            if mevcut_kullanici:
-                cursor.close()
-                conn.close()
-                return render_template('register.html', hata="Bu e-posta veya kullanıcı adı zaten kullanılıyor!")
-            
-            # Yeni kullanıcı ekle
-            cursor.execute(
-                'INSERT INTO kullanicilar (email, kullanici_adi, sifre, dogum_tarihi) VALUES (%s, %s, %s, %s)',
-                (email, kullanici_adi, sifre, dogum_tarihi)
-            )
-            conn.commit()
-            cursor.close()
-        else:
-            # SQLite için
-            mevcut_kullanici = conn.execute(
-                'SELECT * FROM kullanicilar WHERE email = ? OR kullanici_adi = ?',
-                (email, kullanici_adi)
-            ).fetchone()
-            
-            if mevcut_kullanici:
-                conn.close()
-                return render_template('register.html', hata="Bu e-posta veya kullanıcı adı zaten kullanılıyor!")
-            
-            conn.execute(
-                'INSERT INTO kullanicilar (email, kullanici_adi, sifre, dogum_tarihi) VALUES (?, ?, ?, ?)',
-                (email, kullanici_adi, sifre, dogum_tarihi)
-            )
-            conn.commit()
-        
-        conn.close()
-        
-        return redirect(url_for('home'))
-        
-    except Exception as e:
-        return render_template('register.html', hata=f"Kayıt sırasında bir hata oluştu: {str(e)}")
-        # Yaş kontrolü - artık 13+ (gençler için)
-        from datetime import datetime
+        # Yaş kontrolü - 18+
         try:
             birth_date = datetime.strptime(dogum_tarihi, '%Y-%m-%d')
             today = datetime.now()
             age = today.year - birth_date.year - ((today.month, today.day) < (birth_date.month, birth_date.day))
             
-            if age < 13:
-                return render_template('register.html', hata="Bu hizmet 13 yaş ve üzeri kullanıcılar içindir.")
+            if age < 18:
+                return render_template('register.html', hata="Bu hizmet 18 yaş ve üzeri kullanıcılar içindir.")
         except ValueError:
             return render_template('register.html', hata="Geçerli bir doğum tarihi giriniz.")
-            
+        
         conn = get_db_connection()
-        user_exists = conn.execute('SELECT 1 FROM kullanicilar WHERE email = ?', (email,)).fetchone()
         
-        if user_exists:
-            conn.close()
-            return render_template('register.html', hata="Bu e-posta adresi zaten kayıtlı!")
+        # Kullanıcı var mı kontrol et
+        if 'DATABASE_URL' in os.environ:
+            cursor = conn.cursor()
+            cursor.execute(
+                'SELECT * FROM kullanicilar WHERE email = %s OR kullanici_adi = %s',
+                (email, kullanici_adi)
+            )
+            mevcut_kullanici = cursor.fetchone()
+            cursor.close()
+        else:
+            mevcut_kullanici = conn.execute(
+                'SELECT * FROM kullanicilar WHERE email = ? OR kullanici_adi = ?',
+                (email, kullanici_adi)
+            ).fetchone()
         
-        # Gerçek e-posta doğrulama sistemi
+        conn.close()
+        
+        if mevcut_kullanici:
+            return render_template('register.html', hata="Bu e-posta veya kullanıcı adı zaten kullanılıyor!")
+        
+        # Doğrulama kodu oluştur
         verification_code = str(random.randint(100000, 999999))
         verification_codes[email] = {
             'code': verification_code,
@@ -350,6 +318,7 @@ Listoria Ekibi
         else:
             app.logger.error(f"E-posta gönderilemedi: {email}")
             return render_template('register.html', hata="E-posta gönderimi başarısız. Lütfen e-posta adresinizi kontrol edin veya daha sonra tekrar deneyin.")
+            
     except Exception as e:
         app.logger.error(f"Kayıt olma hatası: {str(e)}")
         return render_template('register.html', hata="Kayıt olma işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.")
@@ -360,7 +329,6 @@ def cikis():
     session.pop('kullanici_adi', None)
     return redirect(url_for('home'))
 
-@app.route('/dogrulama')
 def dogrulama():
     email = request.args.get('email')
     if not email or email not in verification_codes:
@@ -383,27 +351,32 @@ def dogrula():
         kullanici_adi = verification_codes[email]['kullanici_adi']
         dogum_tarihi = verification_codes[email]['dogum_tarihi']
         
-        # POSTGRESQL'E UYUMLU KAYIT İŞLEMİ (Eski conn.execute bloğu yerine bu geliyor)
         conn = get_db_connection()
         if conn:
             try:
-                cur = conn.cursor()
-                # PostgreSQL'de kayıt işlemi cursor üzerinden yapılır ve %s kullanılır
-                cur.execute('INSERT INTO kullanicilar (email, kullanici_adi, sifre, dogum_tarihi) VALUES (%s, %s, %s, %s)', 
-                            (email, kullanici_adi, sifre, dogum_tarihi))
+                # PostgreSQL için cursor kullan, SQLite için direkt execute
+                if 'DATABASE_URL' in os.environ:
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        'INSERT INTO kullanicilar (email, kullanici_adi, sifre, dogum_tarihi) VALUES (%s, %s, %s, %s)', 
+                        (email, kullanici_adi, sifre, dogum_tarihi)
+                    )
+                    cursor.close()
+                else:
+                    conn.execute(
+                        'INSERT INTO kullanicilar (email, kullanici_adi, sifre, dogum_tarihi) VALUES (?, ?, ?, ?)', 
+                        (email, kullanici_adi, sifre, dogum_tarihi)
+                    )
                 
                 conn.commit()
-                cur.close()
                 
             except Exception as e:
-                # Eğer benzersiz kısıtlama hatası alırsak (kullanıcı zaten kayıtlıysa)
                 app.logger.error(f"Kayıt işlemi sırasında veritabanı hatası: {e}")
                 conn.rollback()
-                return render_template('verification.html', email=email, hata="Kayıt başarısız oldu (Kullanıcı zaten mevcut veya veritabanı hatası). Lütfen tekrar deneyin.")
+                return render_template('verification.html', email=email, hata="Kayıt başarısız oldu. Lütfen tekrar deneyin.")
             
             finally:
                 conn.close()
-        # KAYIT İŞLEMİ SONU
         
         del verification_codes[email]
         
@@ -411,9 +384,8 @@ def dogrula():
         session['kullanici_adi'] = kullanici_adi
         return redirect(url_for('dashboard'))
     else:
-        verification_codes.pop(email, None)  # Güvenli silme
+        verification_codes.pop(email, None)
         return render_template('verification.html', email=email, hata="Hatalı doğrulama kodu! Lütfen tekrar kayıt olunuz.")
-
 # ============= ÖNERİ SİSTEMİ ROUTE'LARI =============
 
 @app.route('/oneri/<kategori>')
