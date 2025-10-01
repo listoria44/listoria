@@ -57,10 +57,13 @@ def get_db_connection():
         # 2. Şifredeki özel karakterleri düzelt (URL Encoding)
         password = quote_plus(url.password)
         
-        # 3. Yeni, güvenli URL'yi oluştur
-        new_url = f"postgresql://{url.username}:{password}@{url.hostname}:{url.port}{url.path}?sslmode=require"
+        # 3. Port numarası yoksa 5432'yi kullan (YENİ SATIR 1)
+        port = url.port if url.port else 5432
+        
+        # 4. Yeni, güvenli URL'yi oluştur (YENİ SATIR 2)
+        new_url = f"postgresql://{url.username}:{password}@{url.hostname}:{port}{url.path}?sslmode=require"
 
-        # 4. PostgreSQL'e bağlan
+        # 5. PostgreSQL'e bağlan
         conn = psycopg2.connect(new_url)
         conn.autocommit = True
         return conn
