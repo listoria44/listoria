@@ -961,7 +961,7 @@ def generate_book_recommendations(kullanici_kitaplari, yas, tur, min_sayfa, max_
                     if not is_duplicate:
                         api_books_all.append(new_book)
                 
-                time.sleep(0.5)  # API rate limit için
+                time.sleep(0.3)  # API rate limit için
             
             all_recommendations.extend(api_books_all)
             
@@ -1081,7 +1081,7 @@ def generate_book_recommendations(kullanici_kitaplari, yas, tur, min_sayfa, max_
                 remaining -= 1
     
     app.logger.info(f"Toplam {len(final_recommendations)} kitap önerisi hazırlandı (API: {api_count}, Manuel: {manual_count})")
-    return final_recommendations[:8]
+    return final_recommendations[:15]
 
 def generate_film_recommendations(kullanici_filmleri, yas, tur, notlar):
     """API entegreli film öneri algoritması"""
@@ -1105,7 +1105,7 @@ def generate_film_recommendations(kullanici_filmleri, yas, tur, notlar):
             for term in search_terms[:3]:
                 api_movies = fetch_tmdb_movies_api(term, 5)
                 all_recommendations.extend(api_movies)
-                time.sleep(0.5)
+                time.sleep(0.3)
             
             app.logger.info(f"TMDB API'den {len(all_recommendations)} film önerisi alındı")
             
@@ -1163,7 +1163,7 @@ def generate_film_recommendations(kullanici_filmleri, yas, tur, notlar):
     # AI skorlama
     scored_oneriler = calculate_film_similarity_scores(all_recommendations, kullanici_filmleri, notlar)
     
-    return scored_oneriler[:8]
+    return scored_oneriler[:12]
 
 def generate_series_recommendations(kullanici_dizileri, yas, tur, notlar):
     """API entegreli dizi öneri algoritması"""
@@ -1184,7 +1184,7 @@ def generate_series_recommendations(kullanici_dizileri, yas, tur, notlar):
             for term in search_terms[:3]:
                 api_series = fetch_tmdb_tv_api(term, 5)
                 all_recommendations.extend(api_series)
-                time.sleep(0.5)
+                time.sleep(0.3)
             
             app.logger.info(f"TMDB API'den {len(all_recommendations)} dizi önerisi alındı")
             
@@ -1225,7 +1225,7 @@ def generate_series_recommendations(kullanici_dizileri, yas, tur, notlar):
     # AI skorlama
     scored_oneriler = calculate_series_similarity_scores(all_recommendations, kullanici_dizileri, notlar)
     
-    return scored_oneriler[:8]
+    return scored_oneriler[:12]
 
 def generate_music_recommendations(kullanici_muzikleri, yas, tur, notlar):
     """API entegreli müzik öneri algoritması"""
@@ -1252,7 +1252,7 @@ def generate_music_recommendations(kullanici_muzikleri, yas, tur, notlar):
             for term in search_terms[:3]:
                 api_music = fetch_lastfm_music_api(term, 5)
                 all_recommendations.extend(api_music)
-                time.sleep(0.5)
+                time.sleep(0.3)
             
             app.logger.info(f"Last.fm API'den {len(all_recommendations)} şarkı önerisi alındı")
             
@@ -1324,7 +1324,7 @@ def generate_music_recommendations(kullanici_muzikleri, yas, tur, notlar):
     # AI skorlama
     scored_oneriler = calculate_music_similarity_scores(all_recommendations, kullanici_muzikleri, notlar)
     
-    return scored_oneriler[:8]
+    return scored_oneriler[:20]
 
 # ============= SPOTIFY PLAYLIST =============
 def search_spotify_track(sp, sarki_adi, sanatci=''):
@@ -1438,7 +1438,7 @@ def create_spotify_playlist(sarkilar, tur=None):
             
             # Rate limiting için kısa bekleme
             if idx % 10 == 0:
-                time.sleep(0.5)
+                time.sleep(0.3)
         
         # En az 15 şarkı bulundu mu kontrol et
         if len(track_uris) < 15:
@@ -2079,51 +2079,78 @@ def spotify_playlist_olustur():
 
 @app.route('/spotify-login')
 def spotify_login():
-    """Spotify OAuth girişi"""
+    """Spotify OAuth girişi - DÜZELTİLMİŞ"""
     if 'logged_in' not in session:
-        return redirect(url_for('giris'))
+        return redirect(url_for('home'))
     
     if not config.has_spotify_config:
         return jsonify({'error': 'Spotify yapılandırması eksik'}), 500
     
-    sp_oauth = SpotifyOAuth(
-        client_id=SPOTIFY_CLIENT_ID,
-        client_secret=SPOTIFY_CLIENT_SECRET,
-        redirect_uri=SPOTIFY_REDIRECT_URI,
-        scope=SPOTIFY_SCOPE,
-        cache_path=f".spotify-cache-{session.get('kullanici_adi', 'default')}"
-    )
-    
-    auth_url = sp_oauth.get_authorize_url()
-    return redirect(auth_url)
-
+    try:
+        # DÜZELTME: Dinamik redirect URI
+        redirect_uri = request.url_root.rstrip('/') + '/spotify-callback'
+        
+        sp_oauth = SpotifyOAuth(
+            client_id=SPOTIFY_CLIENT_ID,
+            client_secret=SPOTIFY_CLIENT_SECRET,
+            redirect_uri=redirect_uri,
+            scope=SPOTIFY_SCOPE,
+            show_dialog=True  # Her zaman onay ekranı
+        )
+        
+        auth_url = sp_oauth.get_authorize_url()
+        app.logger.info(f"🎵 Spotify auth URL: {auth_url}")
+        
+        return redirect(auth_url)
+        
+    except Exception as e:
+        app.logger.error(f"Spotify login hatası: {str(e)}")
+        return redirect(url_for('oneri_sayfasi', kategori='muzik'))
 @app.route('/spotify-callback')
 def spotify_callback():
-    """Spotify OAuth callback"""
+    """Spotify OAuth callback - DÜZELTİLMİŞ"""
     if 'logged_in' not in session:
         return redirect(url_for('home'))
     
-    sp_oauth = SpotifyOAuth(
-        client_id=SPOTIFY_CLIENT_ID,
-        client_secret=SPOTIFY_CLIENT_SECRET,
-        redirect_uri=SPOTIFY_REDIRECT_URI,
-        scope=SPOTIFY_SCOPE,
-        cache_path=f".spotify-cache-{session.get('kullanici_adi', 'default')}"
-    )
-    
-    code = request.args.get('code')
-    if code:
-        try:
-            token_info = sp_oauth.get_access_token(code)
-            session['spotify_token'] = token_info['access_token']
-            session['spotify_refresh_token'] = token_info.get('refresh_token')
-            app.logger.info(f"Spotify bağlantısı başarılı: {session['kullanici_adi']}")
+    try:
+        # DÜZELTME: Aynı redirect URI
+        redirect_uri = request.url_root.rstrip('/') + '/spotify-callback'
+        
+        sp_oauth = SpotifyOAuth(
+            client_id=SPOTIFY_CLIENT_ID,
+            client_secret=SPOTIFY_CLIENT_SECRET,
+            redirect_uri=redirect_uri,
+            scope=SPOTIFY_SCOPE
+        )
+        
+        code = request.args.get('code')
+        error = request.args.get('error')
+        
+        if error:
+            app.logger.error(f"❌ Spotify auth error: {error}")
             return redirect(url_for('oneri_sayfasi', kategori='muzik'))
-        except Exception as e:
-            app.logger.error(f"Spotify token hatası: {str(e)}")
-            return redirect(url_for('oneri_sayfasi', kategori='muzik'))
-    
-    return redirect(url_for('oneri_sayfasi', kategori='muzik'))
+        
+        if code:
+            try:
+                # check_cache=False ile her zaman yeni token al
+                token_info = sp_oauth.get_access_token(code, check_cache=False)
+                
+                session['spotify_token'] = token_info['access_token']
+                session['spotify_refresh_token'] = token_info.get('refresh_token')
+                session['spotify_expires_at'] = token_info.get('expires_at')
+                
+                app.logger.info(f"✅ Spotify bağlandı: {session['kullanici_adi']}")
+                return redirect(url_for('oneri_sayfasi', kategori='muzik'))
+                
+            except Exception as e:
+                app.logger.error(f"Token alma hatası: {str(e)}")
+                return redirect(url_for('oneri_sayfasi', kategori='muzik'))
+        
+        return redirect(url_for('oneri_sayfasi', kategori='muzik'))
+        
+    except Exception as e:
+        app.logger.error(f"Callback hatası: {str(e)}")
+        return redirect(url_for('oneri_sayfasi', kategori='muzik'))
 
 @app.route('/spotify-disconnect')
 def spotify_disconnect():
