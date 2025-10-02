@@ -1,3 +1,5 @@
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 from datetime import timedelta, datetime  # datetime eklendi
 import sqlite3
@@ -45,6 +47,8 @@ SENDER_PASSWORD = config.SENDER_PASSWORD
 # Spotify API Ayarları
 SPOTIFY_CLIENT_ID = config.SPOTIFY_CLIENT_ID
 SPOTIFY_CLIENT_SECRET = config.SPOTIFY_CLIENT_SECRET
+SPOTIFY_REDIRECT_URI = os.getenv('SPOTIFY_REDIRECT_URI', 'https://listoria-ai.onrender.com/spotify-callback')
+SPOTIFY_SCOPE = 'playlist-modify-public playlist-modify-private'
 
 def get_google_provider_cfg():
     return requests.get(GOOGLE_DISCOVERY_URL).json()
@@ -1323,37 +1327,175 @@ def generate_music_recommendations(kullanici_muzikleri, yas, tur, notlar):
     return scored_oneriler[:8]
 
 # ============= SPOTIFY PLAYLIST =============
-
-def create_spotify_playlist(sarkilar, tur=None):
-    """Spotify playlist oluştur (simüle edilmiş)"""
+def search_spotify_track(sp, sarki_adi, sanatci=''):
+    """Spotify'da şarkı ara ve track URI'sini bul"""
     try:
-        # Playlist için unique ID oluştur
-        playlist_content = ''.join(sarkilar)
-        playlist_hash = hashlib.md5(playlist_content.encode()).hexdigest()[:8]
-        playlist_id = f"listoria_{playlist_hash}"
+        # Şarkı adı ve sanatçıyı temizle
+        query = f"{sarki_adi} {sanatci}".strip()
         
-        # Playlist bilgileri
-        playlist_data = {
-            'id': playlist_id,
-            'name': f"Listoria - {tur.title() if tur and tur != 'hepsi' else 'Karışık'} Playlist",
-            'url': f"https://open.spotify.com/playlist/{playlist_id}",
-            'tracks': sarkilar[:20],  # İlk 20 şarkı
-            'description': 'Listoria AI tarafından oluşturulan playlist',
-            'demo': True  # API olmadığı için demo mod
-        }
+        # Spotify'da ara
+        results = sp.search(q=query, type='track', limit=3)
         
-        return playlist_data
+        if results['tracks']['items']:
+            # En iyi eşleşmeyi bul
+            best_match = results['tracks']['items'][0]
+            
+            return {
+                'uri': best_match['uri'],
+                'id': best_match['id'],
+                'name': best_match['name'],
+                'artist': best_match['artists'][0]['name'],
+                'album': best_match['album']['name'],
+                'image': best_match['album']['images'][0]['url'] if best_match['album']['images'] else None,
+                'preview_url': best_match.get('preview_url')
+            }
+        
+        return None
         
     except Exception as e:
-        app.logger.error(f"Spotify playlist oluşturma hatası: {str(e)}")
+        app.logger.error(f"Spotify şarkı arama hatası: {str(e)}")
+        return None
+
+def create_spotify_playlist(sarkilar, tur=None):
+    """Gerçek Spotify playlist oluştur - EN AZ 15 ŞARKI"""
+    try:
+        # Spotify token kontrolü
+        if 'spotify_token' not in session:
+            return {
+                'error': 'spotify_not_connected',
+                'message': 'Spotify hesabınızı bağlamanız gerekiyor',
+                'demo': True,
+                'login_url': '/spotify-login'
+            }
+        
+        # En az 15 şarkı kontrolü
+        if len(sarkilar) < 15:
+            return {
+                'error': 'not_enough_tracks',
+                'message': f'En az 15 şarkı gerekli. Şu an {len(sarkilar)} şarkı var.',
+                'demo': True
+            }
+        
+        # Spotify client oluştur
+        sp = spotipy.Spotify(auth=session['spotify_token'])
+        
+        # Kullanıcı bilgilerini al
+        try:
+            user_info = sp.current_user()
+            user_id = user_info['id']
+        except spotipy.exceptions.SpotifyException as e:
+            if 'token' in str(e).lower() or 'unauthorized' in str(e).lower():
+                session.pop('spotify_token', None)
+                return {
+                    'error': 'token_expired',
+                    'message': 'Spotify oturumunuz sona erdi. Lütfen tekrar bağlanın.',
+                    'demo': True,
+                    'login_url': '/spotify-login'
+                }
+            raise
+        
+        # Playlist adı oluştur
+        playlist_name = f"Listoria - {tur.title() if tur and tur != 'hepsi' else 'Karışık'} Mix 🎵"
+        playlist_description = f"Listoria AI tarafından özel olarak sizin için oluşturuldu • {len(sarkilar)} şarkı"
+        
+        # Yeni playlist oluştur
+        playlist = sp.user_playlist_create(
+            user=user_id,
+            name=playlist_name,
+            public=True,
+            description=playlist_description
+        )
+        
+        playlist_id = playlist['id']
+        
+        # Şarkıları Spotify'da ara ve URI'leri topla
+        track_uris = []
+        found_tracks = []
+        not_found = []
+        
+        app.logger.info(f"Toplam {len(sarkilar)} şarkı aranıyor...")
+        
+        for idx, sarki in enumerate(sarkilar, 1):
+            # Şarkı adı ve sanatçıyı ayır
+            if ' - ' in sarki:
+                parts = sarki.split(' - ', 1)
+                sarki_adi = parts[0].strip()
+                sanatci = parts[1].strip() if len(parts) > 1 else ''
+            else:
+                sarki_adi = sarki.strip()
+                sanatci = ''
+            
+            # Spotify'da ara
+            track_info = search_spotify_track(sp, sarki_adi, sanatci)
+            
+            if track_info:
+                track_uris.append(track_info['uri'])
+                found_tracks.append(track_info)
+                app.logger.info(f"[{idx}/{len(sarkilar)}] Bulundu: {track_info['name']} - {track_info['artist']}")
+            else:
+                not_found.append(sarki)
+                app.logger.warning(f"[{idx}/{len(sarkilar)}] Bulunamadı: {sarki}")
+            
+            # Rate limiting için kısa bekleme
+            if idx % 10 == 0:
+                time.sleep(0.5)
+        
+        # En az 15 şarkı bulundu mu kontrol et
+        if len(track_uris) < 15:
+            return {
+                'error': 'not_enough_found',
+                'message': f'Sadece {len(track_uris)} şarkı bulundu. En az 15 şarkı gerekli.',
+                'found_count': len(track_uris),
+                'not_found': not_found,
+                'demo': True
+            }
+        
+        # Playlist'e şarkıları ekle (100'lük gruplar halinde - Spotify API limiti)
+        for i in range(0, len(track_uris), 100):
+            batch = track_uris[i:i+100]
+            sp.playlist_add_items(playlist_id, batch)
+            app.logger.info(f"Playlist'e {len(batch)} şarkı eklendi")
+        
+        # Başarılı sonuç
         return {
-            'id': 'demo_playlist',
-            'name': 'Listoria Demo Playlist',
-            'url': 'https://open.spotify.com/playlist/demo',
-            'tracks': sarkilar[:10],
+            'success': True,
+            'id': playlist_id,
+            'name': playlist_name,
+            'url': playlist['external_urls']['spotify'],
+            'tracks': found_tracks,
+            'track_count': len(track_uris),
+            'not_found': not_found,
+            'not_found_count': len(not_found),
+            'description': playlist_description,
+            'demo': False,
+            'image': playlist.get('images', [{}])[0].get('url') if playlist.get('images') else None
+        }
+        
+    except spotipy.exceptions.SpotifyException as e:
+        app.logger.error(f"Spotify API hatası: {str(e)}")
+        
+        if 'token' in str(e).lower() or 'unauthorized' in str(e).lower():
+            session.pop('spotify_token', None)
+            return {
+                'error': 'token_expired',
+                'message': 'Spotify oturumunuz sona erdi. Lütfen tekrar bağlanın.',
+                'demo': True,
+                'login_url': '/spotify-login'
+            }
+        
+        return {
+            'error': 'spotify_error',
+            'message': f'Spotify hatası: {str(e)}',
             'demo': True
         }
-
+        
+    except Exception as e:
+        app.logger.error(f"Playlist oluşturma hatası: {str(e)}")
+        return {
+            'error': 'general_error',
+            'message': f'Playlist oluşturulamadı: {str(e)}',
+            'demo': True
+        }
 # ============= PUANLAMA ALGORİTMALARI =============
 
 def calculate_similarity(str1, str2):
@@ -1922,10 +2064,85 @@ def spotify_playlist_olustur():
         if not sarkilar:
             return jsonify({'error': 'Şarkı listesi boş'}), 400
         
+        if len(sarkilar) < 15:
+            return jsonify({
+                'error': 'not_enough_tracks',
+                'message': f'En az 15 şarkı gerekli. Şu an {len(sarkilar)} şarkı var.'
+            }), 400
+        
         playlist_data = create_spotify_playlist(sarkilar, tur)
         return jsonify(playlist_data)
         
     except Exception as e:
         app.logger.error(f"Playlist oluşturma API hatası: {str(e)}")
-        return jsonify({'error': 'Playlist oluşturulamadı'}), 500
+        return jsonify({'error': 'Playlist oluşturulamadı', 'message': str(e)}), 500
 
+@app.route('/spotify-login')
+def spotify_login():
+    """Spotify OAuth girişi"""
+    if 'logged_in' not in session:
+        return redirect(url_for('giris'))
+    
+    if not config.has_spotify_config:
+        return jsonify({'error': 'Spotify yapılandırması eksik'}), 500
+    
+    sp_oauth = SpotifyOAuth(
+        client_id=SPOTIFY_CLIENT_ID,
+        client_secret=SPOTIFY_CLIENT_SECRET,
+        redirect_uri=SPOTIFY_REDIRECT_URI,
+        scope=SPOTIFY_SCOPE,
+        cache_path=f".spotify-cache-{session.get('kullanici_adi', 'default')}"
+    )
+    
+    auth_url = sp_oauth.get_authorize_url()
+    return redirect(auth_url)
+
+@app.route('/spotify-callback')
+def spotify_callback():
+    """Spotify OAuth callback"""
+    if 'logged_in' not in session:
+        return redirect(url_for('home'))
+    
+    sp_oauth = SpotifyOAuth(
+        client_id=SPOTIFY_CLIENT_ID,
+        client_secret=SPOTIFY_CLIENT_SECRET,
+        redirect_uri=SPOTIFY_REDIRECT_URI,
+        scope=SPOTIFY_SCOPE,
+        cache_path=f".spotify-cache-{session.get('kullanici_adi', 'default')}"
+    )
+    
+    code = request.args.get('code')
+    if code:
+        try:
+            token_info = sp_oauth.get_access_token(code)
+            session['spotify_token'] = token_info['access_token']
+            session['spotify_refresh_token'] = token_info.get('refresh_token')
+            app.logger.info(f"Spotify bağlantısı başarılı: {session['kullanici_adi']}")
+            return redirect(url_for('oneri_sayfasi', kategori='muzik'))
+        except Exception as e:
+            app.logger.error(f"Spotify token hatası: {str(e)}")
+            return redirect(url_for('oneri_sayfasi', kategori='muzik'))
+    
+    return redirect(url_for('oneri_sayfasi', kategori='muzik'))
+
+@app.route('/spotify-disconnect')
+def spotify_disconnect():
+    """Spotify bağlantısını kes"""
+    session.pop('spotify_token', None)
+    session.pop('spotify_refresh_token', None)
+    
+    # Cache dosyasını temizle
+    cache_file = f".spotify-cache-{session.get('kullanici_adi', 'default')}"
+    if os.path.exists(cache_file):
+        os.remove(cache_file)
+    
+    return redirect(url_for('oneri_sayfasi', kategori='muzik'))
+
+@app.route('/spotify-durum')
+def spotify_durum():
+    """Spotify bağlantı durumunu kontrol et"""
+    if 'logged_in' not in session:
+        return jsonify({'connected': False}), 401
+    
+    connected = 'spotify_token' in session
+    return jsonify({'connected': connected})

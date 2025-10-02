@@ -133,6 +133,73 @@
             transform: translateY(-2px);
         }
 
+        /* Spotify Durum Kartı */
+        .spotify-status-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .spotify-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .spotify-icon {
+            font-size: 32px;
+        }
+
+        .spotify-text h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .spotify-text p {
+            margin: 4px 0 0 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .spotify-action-btn {
+            padding: 12px 24px;
+            background: #1DB954;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .spotify-action-btn:hover {
+            background: #1ed760;
+            transform: translateY(-2px);
+        }
+
+        .spotify-action-btn.disconnect {
+            background: #dc3545;
+        }
+
+        .spotify-action-btn.disconnect:hover {
+            background: #c82333;
+        }
+
+        .spotify-action-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
         /* Mobil cihazlar için responsive tasarım */
         @media (max-width: 768px) {
             .music-inputs {
@@ -145,6 +212,16 @@
             
             .form-container {
                 padding: 25px;
+            }
+
+            .spotify-status-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .spotify-info {
+                flex-direction: column;
+                text-align: center;
             }
         }
     </style>
@@ -164,6 +241,20 @@
             🎯 Yaşına uygun müzik önerileri seçeceğim
         </div>
         {% endif %}
+
+        <!-- Spotify Bağlantı Durumu -->
+        <div class="spotify-status-card" id="spotify-status">
+            <div class="spotify-info">
+                <div class="spotify-icon">🎧</div>
+                <div class="spotify-text">
+                    <h3 id="status-text">Spotify Durumu Kontrol Ediliyor...</h3>
+                    <p id="status-desc">Playlist oluşturmak için bağlanın</p>
+                </div>
+            </div>
+            <button id="spotify-btn" onclick="spotifyAction()" class="spotify-action-btn" disabled>
+                Kontrol Ediliyor...
+            </button>
+        </div>
 
         <div class="form-container">
             <form action="{{ url_for('muzik_oneri_al') }}" method="POST">
@@ -243,6 +334,57 @@
     </div>
     
     <script>
+        let isSpotifyConnected = false;
+
+        // Sayfa yüklendiğinde Spotify durumunu kontrol et
+        window.addEventListener('DOMContentLoaded', function() {
+            checkSpotifyStatus();
+        });
+
+        function checkSpotifyStatus() {
+            fetch('/spotify-durum')
+                .then(response => response.json())
+                .then(data => {
+                    isSpotifyConnected = data.connected;
+                    updateSpotifyUI();
+                })
+                .catch(error => {
+                    console.error('Spotify durum hatası:', error);
+                    isSpotifyConnected = false;
+                    updateSpotifyUI();
+                });
+        }
+
+        function updateSpotifyUI() {
+            const statusText = document.getElementById('status-text');
+            const statusDesc = document.getElementById('status-desc');
+            const spotifyBtn = document.getElementById('spotify-btn');
+            
+            spotifyBtn.disabled = false;
+            
+            if (isSpotifyConnected) {
+                statusText.textContent = '✅ Spotify Bağlı';
+                statusDesc.textContent = 'Playlist oluşturmaya hazır';
+                spotifyBtn.textContent = '🔗 Bağlantıyı Kes';
+                spotifyBtn.className = 'spotify-action-btn disconnect';
+            } else {
+                statusText.textContent = '❌ Spotify Bağlı Değil';
+                statusDesc.textContent = 'Playlist oluşturmak için bağlanın';
+                spotifyBtn.textContent = '🎧 Spotify\'a Bağlan';
+                spotifyBtn.className = 'spotify-action-btn';
+            }
+        }
+
+        function spotifyAction() {
+            if (isSpotifyConnected) {
+                if (confirm('Spotify bağlantısını kesmek istediğinize emin misiniz?')) {
+                    window.location.href = '/spotify-disconnect';
+                }
+            } else {
+                window.location.href = '/spotify-login';
+            }
+        }
+
         // Aynı şarkıların girilmesini engelle
         function validateMusic() {
             const musicInputs = ['muzik1', 'muzik2', 'muzik3', 'muzik4', 'muzik5'];
@@ -261,6 +403,13 @@
             
             if (musicValues.length < 3) {
                 alert('⚠️ En az 3 şarkı girmelisiniz!');
+                return false;
+            }
+
+            // Spotify playlist seçildiyse Spotify bağlantı kontrolü
+            const oneriTuru = document.querySelector('input[name="oneri_turu"]:checked').value;
+            if (oneriTuru === 'spotify_playlist' && !isSpotifyConnected) {
+                alert('⚠️ Spotify playlist oluşturmak için önce Spotify hesabınızı bağlamalısınız!\n\nYukarıdaki "Spotify\'a Bağlan" butonuna tıklayın.');
                 return false;
             }
             
