@@ -333,6 +333,7 @@ def cikis():
     session.pop('kullanici_adi', None)
     return redirect(url_for('home'))
 
+@app.route('/dogrulama')  # BU SATIR EKSİK
 def dogrulama():
     email = request.args.get('email')
     if not email or email not in verification_codes:
@@ -672,9 +673,8 @@ def muzik_oneri_al():
         # Spotify playlist oluştur (eğer playlist modu seçildiyse)
         playlist_data = None
         if oneri_turu == 'spotify_playlist':
-            playlist_data = create_spotify_playlist(
-                kullanici_muzikleri + [f"{o['baslik']} - {o['sanatci']}" for o in oneriler[:10]], 
-                tur
+            all_tracks = kullanici_muzikleri + [f"{o['baslik']} - {o['sanatci']}" for o in oneriler](
+                playlist_data = create_spotify_playlist(all_tracks, tur)
             )
         
         return render_template('muzik_sonuc.html', 

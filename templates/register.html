@@ -3,95 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kayıt Ol</title>
+    <title>Kayıt Ol - Listoria</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            /* R 249, G 249, B 249 rengi (#f9f9f9) olarak ayarlandı */
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: #f9f9f9;
-            color: black;
+            color: #333;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
         }
 
         form {
-            background-color: transparent; /* Formun kendi rengi kaldırıldı */
-            padding: 80px 40px;
-            border-radius: 25px; 
-            box-shadow: none; /* Gölge kaldırıldı */
-            width: 350px;
-            text-align: center;
-            border: none;
+            background-color: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
 
         h1 {
-            color: black;
-            font-size: 28px;
-            margin-bottom: 25px;
-            text-shadow: none;
+            color: #333;
+            font-size: 32px;
+            margin: 0 0 10px 0;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .error {
+            background-color: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .success {
+            background-color: #efe;
+            border: 1px solid #cfc;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
         }
 
         input {
             width: 100%;
             padding: 15px;
-            border: 1px solid #ccc;
-            border-radius: 50px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
             box-sizing: border-box;
             background-color: white;
-            color: black;
+            color: #333;
             font-size: 16px;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-            transition: border-color 0.3s, box-shadow 0.3s;
+            transition: all 0.3s;
+            font-family: inherit;
         }
         
         input::placeholder {
-            color: #777;
+            color: #999;
         }
 
         input:focus {
-            border-color: #007bff;
+            border-color: #4a90e2;
             outline: none;
-            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+        }
+
+        .age-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            color: #856404;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .age-warning strong {
+            display: block;
+            margin-bottom: 5px;
         }
 
         .btn-primary {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             color: white;
             border: none;
-            border-radius: 50px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 16px;
             font-weight: 600;
-            transition: transform 0.2s, background-color 0.2s;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            background-color: black;
-            color: white;
-            padding: 15px;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
         .btn-primary:hover {
-            background-color: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
         }
 
         .btn-primary:active {
-            transform: translateY(1px);
+            transform: translateY(0);
         }
 
         .separator {
             display: flex;
             align-items: center;
             text-align: center;
-            color: black;
-            font-size: 18px; 
-            font-weight: bold;
+            color: #999;
+            font-size: 14px;
+            font-weight: 500;
             margin: 10px 0;
         }
 
@@ -99,33 +143,32 @@
         .separator::after {
             content: '';
             flex: 1;
-            border-bottom: 1px solid #ccc;
+            border-bottom: 1px solid #e1e5e9;
         }
 
         .separator:not(:empty)::before {
-            margin-right: .25em;
+            margin-right: 15px;
         }
 
         .separator:not(:empty)::after {
-            margin-left: .25em;
+            margin-left: 15px;
         }
 
         .btn-google {
             background-color: white;
             color: #333;
-            border: 1px solid #ccc;
+            border: 2px solid #e1e5e9;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             width: 100%;
-            padding: 12px;
-            border-radius: 50px;
+            padding: 14px;
+            border-radius: 12px;
             cursor: pointer;
             font-size: 16px;
             font-weight: 600;
-            transition: transform 0.2s, background-color 0.2s;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
             text-decoration: none;
         }
 
@@ -135,41 +178,101 @@
         }
 
         .btn-google:hover {
-            background-color: #eee;
+            background-color: #f8f9fa;
+            border-color: #d1d5db;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .login-link {
+            text-align: center;
             font-size: 14px;
+            color: #666;
+            margin-top: 10px;
         }
 
         .login-link a {
-            color: #007bff;
+            color: #667eea;
             text-decoration: none;
-            font-weight: bold;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            form {
+                padding: 30px 25px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
         }
     </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <form method="POST" action="{{ url_for('kayit_ol') }}">
-        <h1>Kayıt Ol</h1>
-        {% if hata %}
-            <p class="error">{{ hata }}</p>
-        {% endif %}
-        <input type="email" id="email" name="email" placeholder="E-posta Adresi" required>
-        <input type="text" id="kullanici_adi" name="kullanici_adi" placeholder="Kullanıcı Adı" required>
-        <input type="password" id="sifre" name="sifre" placeholder="Şifre" required>
-        <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 12px; padding: 15px; margin: 15px 0; text-align: center; color: #856404; font-size: 14px;">
-            <strong>⚠️ Yaş Sınırı:</strong> Bu hizmet 18 yaş ve üzeri kullanıcılar içindir
-        </div>
-        <input type="date" id="dogum_tarihi" name="dogum_tarihi" required>
-        <button type="submit" class="btn-primary">Kayıt Ol</button>
-        <div class="separator">YA DA</div>
-        <a href="{{ url_for('google_giris') }}" class="btn-google">
-            <img src="https://www.google.com/favicon.ico" alt="Google Logo"> Google ile Devam Et
-        </a>
-        <div class="login-link">
-            Zaten hesabın var mı? <a href="{{ url_for('home') }}">Giriş Yap</a>
-        </div>
-    </form>
+    <div class="container">
+        <form method="POST" action="{{ url_for('kayit_ol') }}" id="registerForm">
+            <h1>🎯 Kayıt Ol</h1>
+            <p class="subtitle">Listoria'ya hoş geldin! Hemen başlayalım.</p>
+            
+            {% if hata %}
+                <div class="error">⚠️ {{ hata }}</div>
+            {% endif %}
+            
+            <input type="email" id="email" name="email" placeholder="📧 E-posta Adresi" required>
+            <input type="text" id="kullanici_adi" name="kullanici_adi" placeholder="👤 Kullanıcı Adı" required minlength="3" maxlength="20">
+            <input type="password" id="sifre" name="sifre" placeholder="🔒 Şifre" required minlength="6">
+            
+            <div class="age-warning">
+                <strong>⚠️ Yaş Sınırı</strong>
+                Bu hizmet 18 yaş ve üzeri kullanıcılar içindir
+            </div>
+            
+            <input type="date" id="dogum_tarihi" name="dogum_tarihi" required max="{{ max_date }}">
+            
+            <button type="submit" class="btn-primary">🚀 Kayıt Ol</button>
+            
+            <div class="separator">YA DA</div>
+            
+            <a href="{{ url_for('google_giris') }}" class="btn-google">
+                <img src="https://www.google.com/favicon.ico" alt="Google Logo"> Google ile Devam Et
+            </a>
+            
+            <div class="login-link">
+                Zaten hesabın var mı? <a href="{{ url_for('home') }}">Giriş Yap</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Bugünün tarihini hesapla (18 yaş sınırı için)
+        const today = new Date();
+        const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+        const maxDateStr = maxDate.toISOString().split('T')[0];
+        document.getElementById('dogum_tarihi').setAttribute('max', maxDateStr);
+
+        // Form validasyonu
+        document.getElementById('registerForm').addEventListener('submit', function(e) {
+            const birthDate = new Date(document.getElementById('dogum_tarihi').value);
+            const age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            
+            const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
+                ? age - 1 
+                : age;
+            
+            if (actualAge < 18) {
+                e.preventDefault();
+                alert('⚠️ Bu hizmet 18 yaş ve üzeri kullanıcılar içindir.');
+                return false;
+            }
+        });
+    </script>
 </body>
 </html>
