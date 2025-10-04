@@ -9,7 +9,11 @@ class Config:
     DEBUG = os.getenv('DEBUG', 'False').lower() in ['true', '1', 'yes']
     ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
     
-    # Email Configuration
+    # SendGrid Email Configuration
+    SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY', '')
+    SENDGRID_FROM_EMAIL = os.getenv('SENDGRID_FROM_EMAIL', '')
+    
+    # Eski email config (backup için kalsın)
     SENDER_EMAIL = os.getenv('SENDER_EMAIL', '')
     SENDER_PASSWORD = os.getenv('SENDER_PASSWORD', '')
     
@@ -21,15 +25,21 @@ class Config:
     SPOTIFY_CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID', '')
     SPOTIFY_CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET', '')
     
-    # API Keys - NOW ACTIVE!
-    TMDB_API_KEY = os.getenv('TMDB_API_KEY', '')  # For movies/TV shows
-    GOOGLE_BOOKS_API_KEY = os.getenv('GOOGLE_BOOKS_API_KEY', '')  # For books
-    HUGGING_FACE_TOKEN = os.getenv('HUGGING_FACE_TOKEN', '')  # For AI recommendations
-    LASTFM_API_KEY = os.getenv('LASTFM_API_KEY', '')  # For music metadata
+    # API Keys
+    TMDB_API_KEY = os.getenv('TMDB_API_KEY', '')
+    GOOGLE_BOOKS_API_KEY = os.getenv('GOOGLE_BOOKS_API_KEY', '')
+    HUGGING_FACE_TOKEN = os.getenv('HUGGING_FACE_TOKEN', '')
+    LASTFM_API_KEY = os.getenv('LASTFM_API_KEY', '')
     
     @property
     def has_email_config(self):
-        return bool(self.SENDER_EMAIL and self.SENDER_PASSWORD)
+        # SendGrid varsa onu kullan, yoksa eski sistemi dene
+        return bool(self.SENDGRID_API_KEY and self.SENDGRID_FROM_EMAIL) or \
+               bool(self.SENDER_EMAIL and self.SENDER_PASSWORD)
+    
+    @property
+    def has_sendgrid(self):
+        return bool(self.SENDGRID_API_KEY and self.SENDGRID_FROM_EMAIL)
     
     @property  
     def has_google_oauth(self):

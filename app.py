@@ -118,17 +118,43 @@ def send_email(receiver_email, subject, body):
     # E-posta ayarları zorunlu kontrol
     if not config.has_email_config:
         app.logger.warning("E-posta ayarları eksik. Geliştirme modu için kod konsola yazdırılıyor.")
-        app.logger.info(f"📧 Email: {receiver_email}")
-        app.logger.info(f"📋 Konu: {subject}")
-        app.logger.info(f"📝 İçerik: {body}")
+        app.logger.info(f"Email: {receiver_email}")
+        app.logger.info(f"Konu: {subject}")
+        app.logger.info(f"İçerik: {body}")
         print(f"\n{'='*50}")
-        print(f"📧 EMAIL GÖNDERİLEMEDİ - GELİŞTİRME MODU")
+        print(f"EMAIL GÖNDERİLEMEDİ - GELİŞTİRME MODU")
         print(f"Alıcı: {receiver_email}")
         print(f"Konu: {subject}")
         print(f"İçerik:\n{body}")
         print(f"{'='*50}\n")
-        return True  # Geliştirme modunda başarılı sayalım
-        
+        return True
+    
+    # SendGrid SMTP ile gönder (port 2525)
+    if config.has_sendgrid:
+        try:
+            msg = EmailMessage()
+            msg.set_content(body)
+            msg['Subject'] = subject
+            msg['From'] = config.SENDGRID_FROM_EMAIL
+            msg['To'] = receiver_email
+            
+            # SendGrid SMTP: smtp.sendgrid.net, port 2525
+            with smtplib.SMTP('smtp.sendgrid.net', 2525) as smtp:
+                smtp.starttls()  # TLS başlat
+                smtp.login('apikey', config.SENDGRID_API_KEY)  # Username: 'apikey', Password: API key
+                smtp.send_message(msg)
+            
+            app.logger.info(f"SendGrid SMTP ile e-posta başarıyla gönderildi: {receiver_email}")
+            return True
+            
+        except smtplib.SMTPException as e:
+            app.logger.error(f"SendGrid SMTP hatası: {str(e)}")
+            return False
+        except Exception as e:
+            app.logger.error(f"SendGrid e-posta gönderme hatası: {str(e)}")
+            return False
+    
+    # Eski sistem (Gmail SMTP) - artık kullanılmayacak ama backup olarak kalsın
     try:
         msg = EmailMessage()
         msg.set_content(body)
@@ -137,17 +163,18 @@ def send_email(receiver_email, subject, body):
         msg['To'] = receiver_email
         
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtp:
+        # Port 587 deneyelim (Gmail için alternatif)
+        with smtplib.SMTP('smtp.gmail.com', 587) as smtp:
+            smtp.starttls(context=context)
             smtp.login(config.SENDER_EMAIL, config.SENDER_PASSWORD)
             smtp.send_message(msg)
         
-        app.logger.info(f"E-posta başarıyla gönderildi: {receiver_email}")
+        app.logger.info(f"Gmail SMTP ile e-posta başarıyla gönderildi: {receiver_email}")
         return True
         
     except Exception as e:
-        app.logger.error(f"E-posta gönderme hatası: {str(e)}")
+        app.logger.error(f"Gmail SMTP e-posta gönderme hatası: {str(e)}")
         return False
-
 @app.route('/')
 def home():
     if 'logged_in' in session:
